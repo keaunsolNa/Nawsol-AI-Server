@@ -1,0 +1,35 @@
+# Web Framework
+fastapi
+uvicorn[standard]
+
+# HTTP Clients
+aiohttp
+httpx
+requests
+
+# Database
+pymysql
+sqlalchemy
+
+# Cache
+redis
+
+# Environment Variables
+python-dotenv
+
+# File Upload & Processing
+python-multipart
+pypdf
+
+# Cryptography
+cryptography
+pycryptodome
+
+# Task Scheduling
+apscheduler
+
+# AI/ML
+openai
+
+# Data Validation (included with FastAPI, but explicit for clarity)
+pydantic
