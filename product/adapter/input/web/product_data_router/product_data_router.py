@@ -32,6 +32,13 @@ async def get_etf_info():
         ]
     }
 
+@product_data_router.get("/etf/{date}")
+async def get_etf_info(date:str):
+    usecase = FetchProductDataUsecaseFactory.create()
+    result = await usecase.get_etf_data_by_date(date)
+    return result
+
+
 @product_data_router.post("/etf/save")
 async def fetch_and_save_etf():
 

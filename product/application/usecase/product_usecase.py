@@ -17,6 +17,9 @@ class FetchProductUseCase:
     async def get_etf_data(self) -> ProductEtfData:
         return await self.adapter.get_etf_data()
 
+    async def get_etf_data_by_date(self, date: str) -> List[ProductEtf]:
+        return await self.repository.get_etf_data_by_date(date)
+
     async def fetch_and_save_etf_data(self) -> List[ProductEtf]:
 
         client = DataGoClient()

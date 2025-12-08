@@ -1,5 +1,7 @@
 from typing import List
 
+from sqlalchemy.engine import row
+
 from product.application.port.product_repository_port import ProductRepositoryPort
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
@@ -27,6 +29,32 @@ class ProductRepositoryImpl(ProductRepositoryPort):
     def __init__(self):
         if not hasattr(self, 'db'):
             self.db: Session = get_db_session()
+
+    async def get_etf_data_by_date(self, date:str) -> List[ProductEtf]:
+        rows = (self.db.query(ProductETFORM).
+                filter(func.date_format(ProductETFORM.basDt, "%Y%m%d") == date).
+                all())
+
+        return [
+            ProductEtf(
+                fltRt=row.fltRt,
+                nav=row.nav,
+                mkp=row.mkp,
+                hipr=row.hipr,
+                lopr=row.lopr,
+                trqu=row.trqu,
+                trPrc=row.trPrc,
+                mrktTotAmt=row.mrktTotAmt,
+                nPptTotAmt=row.nPptTotAmt,
+                stLstgCnt=row.stLstgCnt,
+                bssIdxIdxNm=row.bssIdxIdxNm,
+                bssIdxClpr=row.bssIdxClpr,
+                basDt=row.basDt,
+                clpr=row.clpr,
+                vs=row.vs
+            )
+            for row in rows
+        ]
 
     async def save_etf_batch(self, etf_list: List[ProductEtf]) -> List[ProductEtf]:
 
