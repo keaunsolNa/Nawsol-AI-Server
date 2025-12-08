@@ -2,6 +2,8 @@ import os
 
 from dotenv import load_dotenv
 
+from market_data.adapter.input.web.market_data_router import market_data_router
+
 load_dotenv()
 
 from product.adapter.input.web.product_data_router.product_data_router import product_data_router
@@ -55,6 +57,7 @@ app.include_router(kftc_router, prefix="/kftc")
 app.include_router(ecos_data_router, prefix="/ecos")
 app.include_router(ie_info_router, prefix="/ie_info")
 app.include_router(product_data_router, prefix="/product")
+app.include_router(market_data_router, prefix="/market-data")
 # 앱 실행
 
 if __name__ == "__main__":
