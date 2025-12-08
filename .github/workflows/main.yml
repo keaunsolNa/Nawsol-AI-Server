@@ -44,7 +44,7 @@ jobs:
 
   deploy:
     needs: build-and-push
-    runs-on: [self-hosted, fastapi-server]
+    runs-on: [self-hosted, nawsol-server]
 
     steps:
       # GHCR 로그인
