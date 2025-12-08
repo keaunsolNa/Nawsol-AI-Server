@@ -8,6 +8,7 @@ from documents_multi_agents.adapter.input.web.document_multi_agent_router import
 from ecos.adapter.input.web.ecos_data_router.ecos_data_router import ecos_data_router
 from ieinfo.adapter.input.web.ie_info_router import ie_info_router
 from kftc.adapter.input.web.kftc_router import kftc_router
+from market_data.adapter.input.web.market_data_router import market_data_router
 from sosial_oauth.adapter.input.web.google_oauth2_router import authentication_router
 
 # ORM 모델들을 Base.metadata에 등록하기 위해 import, TODO: 기능 개발 후 삭제
@@ -42,6 +43,7 @@ app.include_router(documents_multi_agents_router, prefix="/flow")  # 프론트�
 app.include_router(kftc_router, prefix="/kftc")
 app.include_router(ecos_data_router, prefix="/ecos")
 app.include_router(ie_info_router, prefix="/ie_info")
+app.include_router(market_data_router, prefix="/market-data")
 # 앱 실행
 
 if __name__ == "__main__":

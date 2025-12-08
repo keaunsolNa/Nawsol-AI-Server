@@ -61,8 +61,14 @@ class KftcService:
     # -----------------------------
     @staticmethod
     def generate_bank_tran_id():
-        return f"M202300000U{uuid.uuid4().hex[:9]}"
+        org_code = "M202502910"  
+        import random
+        unique_num = str(random.randint(0, 999999999)).zfill(9)
+        return f"{org_code}U{unique_num}"
 
+    # -----------------------------
+    # 거래 내역 조회
+    # -----------------------------
     @staticmethod
     def get_account_transactions(access_token, bank_tran_id,
                                  fintech_use_num, from_date, to_date):
@@ -74,7 +80,7 @@ class KftcService:
             "Content-Type": "application/x-www-form-urlencoded"
         }
 
-        payload = {
+        params = {
             "bank_tran_id": bank_tran_id,
             "fintech_use_num": fintech_use_num,
             "inquiry_type": "A",
@@ -85,7 +91,7 @@ class KftcService:
             "tran_dtime": datetime.now().strftime("%Y%m%d%H%M%S")
         }
 
-        return requests.post(url, data=payload, headers=headers).json()
+        return requests.get(url, headers=headers, params=params).json()
 
     # -----------------------------
     # 3) 카드 목록 조회
@@ -99,9 +105,9 @@ class KftcService:
 
         return requests.get(url, headers=headers, params=params).json()
 
-        # -----------------------------
-        # 4) 카드 승인 내역 조회
-        # -----------------------------
+    # -----------------------------
+    # 4) 카드 승인 내역 조회
+    # -----------------------------
 
     @staticmethod
     def get_card_transactions(access_token, user_seq_no,

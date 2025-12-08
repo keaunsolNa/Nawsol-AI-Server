@@ -20,6 +20,7 @@ def auth_callback(code: str):
 
     # 2) 사용자 정보 조회 → 계좌 목록 포함
     user_info = svc.get_user_info(access_token, user_seq_no)
+    logger.debug(f"User info: {user_info}")
     logger.debug("User info fetched")
 
     # 3) 계좌 목록 기반 거래내역 조회
@@ -36,6 +37,7 @@ def auth_callback(code: str):
             to_date="20251030"
         )
 
+        logger.debug(f"Account transactions: {tx_list}")
         account_results.append({
             "bank_name": acc["bank_name"],
             "account_num": acc["account_num_masked"],
@@ -43,9 +45,11 @@ def auth_callback(code: str):
         })
 
     logger.debug("Account transactions fetched")
+    logger.debug(f"Account results: {account_results}")
 
     # 4) 카드 목록 조회
     card_list = svc.get_card_list(access_token, user_seq_no)
+    logger.debug(f"Card list: {card_list}")
     logger.debug("Card list fetched")
 
     # 5) 카드별 승인내역 조회
@@ -61,12 +65,15 @@ def auth_callback(code: str):
             to_datetime="20240201"
         )
 
+        logger.debug(f"Card approval list: {approval_list}")
         card_results.append({
             "card_name": card["card_name"],
             "org_code": org_code,
             "approvals": approval_list
         })
 
+    logger.debug("Card approval list fetched")
+    logger.debug(f"Card results: {card_results}")
     return {
         "user_info": user_info,
         "accounts": account_results,
