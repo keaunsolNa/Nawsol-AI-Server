@@ -1,4 +1,4 @@
-# NaSol-AI-Server!
+# NaSol-AI-Server
 
 # 재무 정보 분석 가이드
 
