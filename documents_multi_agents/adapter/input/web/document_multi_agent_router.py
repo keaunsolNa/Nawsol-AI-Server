@@ -261,8 +261,35 @@ async def analyze_document(
             # 타입을 모를 경우 원본 데이터만 반환
             categorized_data = {"raw_items": extracted_items}
 
+        # 🔥 로그인한 사용자인 경우 DB에 자동 저장
+        db_save_result = None
+        try:
+            user_token = redis_client.hget(session_id, "USER_TOKEN")
+            if user_token:
+                if isinstance(user_token, bytes):
+                    user_token = user_token.decode('utf-8')
+                
+                # GUEST가 아닌 로그인 사용자만 DB 저장
+                if user_token != "GUEST":
+                    from datetime import datetime
+                    from ieinfo.application.usecase.ie_info_usecase import IEInfoUseCase
+                    
+                    ie_usecase = IEInfoUseCase.get_instance()
+                    now = datetime.now()
+                    db_save_result = ie_usecase.save_ie_data_from_redis(
+                        session_id=session_id,
+                        year=now.year,
+                        month=now.month
+                    )
+                    logger.info(f"DB save result: {db_save_result}")
+        except Exception as db_error:
+            logger.error(f"Failed to save to DB (non-critical): {str(db_error)}")
+            # DB 저장 실패해도 API 응답은 정상 반환 (Redis 저장은 성공했으므로)
+            import traceback
+            traceback.print_exc()
+
         # 성공 응답 반환 (session_id 포함)
-        return {
+        response_data = {
             "success": True,
             "message": "분석 완료",
             "session_id": session_id,  # 프론트엔드에서 사용할 수 있도록 명시적으로 반환
@@ -270,6 +297,18 @@ async def analyze_document(
             "extracted_count": len(extracted_items),
             "categorized_data": categorized_data
         }
+        
+        # DB 저장 결과 추가 (있는 경우)
+        if db_save_result:
+            response_data["db_saved"] = db_save_result["success"]
+            if db_save_result["success"]:
+                response_data["db_save_info"] = {
+                    "saved_count": db_save_result.get("saved_count", 0),
+                    "year": db_save_result.get("year"),
+                    "month": db_save_result.get("month")
+                }
+        
+        return response_data
 
     except Exception as e:
         raise HTTPException(500, f"{type(e).__name__}: {str(e)}")
@@ -594,7 +633,34 @@ async def insert_document(
         else:
             categorized_data = {"raw_items": extracted_items}
 
-        return {
+        # 🔥 로그인한 사용자인 경우 DB에 자동 저장
+        db_save_result = None
+        try:
+            user_token = redis_client.hget(session_id, "USER_TOKEN")
+            if user_token:
+                if isinstance(user_token, bytes):
+                    user_token = user_token.decode('utf-8')
+                
+                # GUEST가 아닌 로그인 사용자만 DB 저장
+                if user_token != "GUEST":
+                    from datetime import datetime
+                    from ieinfo.application.usecase.ie_info_usecase import IEInfoUseCase
+                    
+                    ie_usecase = IEInfoUseCase.get_instance()
+                    now = datetime.now()
+                    db_save_result = ie_usecase.save_ie_data_from_redis(
+                        session_id=session_id,
+                        year=now.year,
+                        month=now.month
+                    )
+                    logger.info(f"DB save result: {db_save_result}")
+        except Exception as db_error:
+            logger.error(f"Failed to save to DB (non-critical): {str(db_error)}")
+            # DB 저장 실패해도 API 응답은 정상 반환 (Redis 저장은 성공했으므로)
+            import traceback
+            traceback.print_exc()
+
+        response_data = {
             "success": True,
             "message": "분석 완료",
             "session_id": session_id,
@@ -603,6 +669,18 @@ async def insert_document(
             "categorized_data": categorized_data,
             "expire_in_seconds": session_expire_seconds
         }
+        
+        # DB 저장 결과 추가 (있는 경우)
+        if db_save_result:
+            response_data["db_saved"] = db_save_result["success"]
+            if db_save_result["success"]:
+                response_data["db_save_info"] = {
+                    "saved_count": db_save_result.get("saved_count", 0),
+                    "year": db_save_result.get("year"),
+                    "month": db_save_result.get("month")
+                }
+        
+        return response_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
