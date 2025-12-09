@@ -15,10 +15,14 @@ from ecos.adapter.input.web.ecos_data_router.ecos_data_router import ecos_data_r
 from ieinfo.adapter.input.web.ie_info_router import ie_info_router
 from kftc.adapter.input.web.kftc_router import kftc_router
 from sosial_oauth.adapter.input.web.google_oauth2_router import authentication_router
+from news_info.adapter.input.web.news_info_router import news_info_router
 from jobs import scheduler as jobs_scheduler
 
 # ORM 모델들을 Base.metadata에 등록하기 위해 import, TODO: 기능 개발 후 삭제
 from ieinfo.infrastructure.orm.ie_info import IEInfo
+from product.infrastructure.orm.product_bond import ProductBondORM
+from product.infrastructure.orm.product_fund import ProductFundORM
+from finance.infrastructure.orm.finance_orm import FinanceORM
 
 
 from fastapi import FastAPI
@@ -57,6 +61,8 @@ app.include_router(ie_info_router, prefix="/ie_info")
 app.include_router(product_data_router, prefix="/product")
 app.include_router(market_data_router, prefix="/market-data")
 app.include_router(finance_router, prefix="/finance")
+app.include_router(news_info_router, prefix="/news_info")
+
 # 앱 실행
 
 if __name__ == "__main__":
