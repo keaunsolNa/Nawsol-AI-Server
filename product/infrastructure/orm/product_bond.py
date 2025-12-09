@@ -5,10 +5,10 @@ class ProductBondORM(Base):
     __tablename__ = "product_bond"
     id = Column(Integer, primary_key=True, index=True)
     basDt = Column(DateTime, default=datetime.utcnow)       # 기준일자
-    cmo = Column(String(255), nullable=True)                # 법인등록번호
-    bondlsurNm = Column(String(255), nullable=True)         # 채권발행인명
-    bondlssuDt = Column(DateTime, default=datetime.utcnow)  # 채권발행일자
-    scrsltmsKod = Column(String(255), nullable=True)        # 유가증권종목종류코드
+    crno = Column(String(255), nullable=True)                # 법인등록번호
+    bondIsurNm = Column(String(255), nullable=True)         # 채권발행인명
+    bondIssuDt = Column(DateTime, default=datetime.utcnow)  # 채권발행일자
+    scrsItmsKcd = Column(String(255), nullable=True)        # 유가증권종목종류코드
     scrsItmsKcdNm = Column(String(255), nullable=True)      # 유가증권종목종류코드명
     isinCd = Column(String(255), nullable=True)             # ISIN코드
     isinCdNm = Column(String(255), nullable=True)           # ISIN코드명
