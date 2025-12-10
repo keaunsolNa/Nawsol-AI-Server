@@ -9,6 +9,7 @@ from config.redis_config import get_redis
 from kakao_authentication.application.usecase.kakao_oauth_usecase import KakaoOAuthUseCase
 from kakao_authentication.infrastructure.client.kakao_oauth_client import KakaoOAuthClient
 from util.log.log import Log
+from util.security.crsf import CSRF_COOKIE_NAME, generate_csrf_token
 
 kakao_authentication_router = APIRouter()
 
@@ -67,6 +68,11 @@ async def kakao_redirect(code: str):
     logger.debug("Session saved in Redis: %s", redis_client.exists(session_id))
 
     logger.debug("CSRF token generated")
+
+    # CSRF 토큰 생성
+    csrf_token = generate_csrf_token()
+    logger.debug("CSRF token generated")
+
     # 브라우저 쿠키 발급
     response = RedirectResponse(CORS_ALLOWED_FRONTEND_URL)
     response.set_cookie(
@@ -76,6 +82,16 @@ async def kakao_redirect(code: str):
         secure=False,  # HTTPS 필수
         samesite="lax",  # cross-site 리다이렉트 허용
         max_age=86400
+    )
+
+    # CSRF 토큰 쿠키 발급
+    response.set_cookie(
+        key=CSRF_COOKIE_NAME,
+        value=csrf_token,
+        httponly=False,  # JS에서 읽어서 헤더에 넣을 수 있도록 False
+        secure=True,
+        samesite="lax",
+        max_age=3600
     )
 
     logger.debug(f"response: {response}")
