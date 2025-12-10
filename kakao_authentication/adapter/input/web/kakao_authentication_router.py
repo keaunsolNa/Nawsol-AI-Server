@@ -88,8 +88,8 @@ async def kakao_redirect(code: str):
     response.set_cookie(
         key=CSRF_COOKIE_NAME,
         value=csrf_token,
-        httponly=False,  # JS에서 읽어서 헤더에 넣을 수 있도록 False
-        secure=True,
+        httponly=False,
+        secure=False,
         samesite="lax",
         max_age=3600
     )
