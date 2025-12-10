@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Body
 
 from product.application.factory.fetch_product_data_usecase_factory import FetchProductDataUsecaseFactory
 
@@ -40,10 +40,13 @@ async def get_etf_info(date:str):
 
 
 @product_data_router.post("/etf/save")
-async def fetch_and_save_etf():
+async def fetch_and_save_etf(
+        start:str | None = Body(None),
+        end:str | None = Body(None)
+):
 
     usecase = FetchProductDataUsecaseFactory.create()
-    saved_entities = await usecase.fetch_and_save_etf_data()
+    saved_entities = await usecase.fetch_and_save_etf_data(start, end)
 
     return {
         "massage": "ETF 정보가 성공적으로 저장되었습니다.",
