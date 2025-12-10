@@ -42,7 +42,7 @@ class FinanceUseCase:
                 id=orm.id,
                 user_id=orm.user_id,
                 type=orm.type,
-                base_dt=orm.base_dt,
+                base_dt=orm.base_dt.isoformat(),
                 key=orm.key,
                 value=orm.value
             )
