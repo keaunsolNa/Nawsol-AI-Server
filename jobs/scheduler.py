@@ -40,6 +40,13 @@ def create_scheduler():
 
         trigger = CronTrigger(hour=cron_etf_hour, minute=cron_etf_minute)
         scheduler.add_job(run_scheduler_product_etf, trigger)
+
+        trigger = CronTrigger(hour=cron_fund_hour, minute=cron_fund_minute)
+        scheduler.add_job(run_scheduler_product_fund, trigger)
+
+        trigger = CronTrigger(hour=cron_bond_hour, minute=cron_bond_minute)
+        scheduler.add_job(run_scheduler_product_bond, trigger)
+
     return scheduler
 
 
@@ -71,3 +78,19 @@ async def run_scheduler_ecos_interest():
 async def run_scheduler_product_etf():
     usecase = FetchProductDataUsecaseFactory.create()
     await usecase.fetch_and_save_etf_data()
+
+## 펀드
+async def run_scheduler_product_fund():
+    usecase = FetchProductDataUsecaseFactory.create()
+    from datetime import datetime
+
+    today = datetime.now().strftime("%Y%m%d")
+    await usecase.get_bond_data_by_date(today)
+
+## 채권
+async def run_scheduler_product_bond():
+    usecase = FetchProductDataUsecaseFactory.create()
+    from datetime import datetime
+
+    today = datetime.now().strftime("%Y%m%d")
+    await usecase.get_bond_data_by_date(today)

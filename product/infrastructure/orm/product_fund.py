@@ -1,6 +1,6 @@
 from datetime import datetime
-
 from sqlalchemy import Column, String, Integer, DateTime
+
 
 from config.database.session import Base
 
@@ -12,7 +12,7 @@ class ProductFundORM(Base):
     srtnCd = Column(String(255), nullable=True)             # 단축코드
     fndNm = Column(String(255), nullable=True)              # 펀드명
     ctg = Column(String(255), nullable=True)                # 구분
-    setpDt = Column(DateTime, default=datetime.utcnow)      # 설정일
+    setpDt = Column(DateTime, nullable=True)                # 설정일
     fndTp = Column(String(255), nullable=True)              # 펀드유형
     prdClsfCd = Column(String(255), nullable=True)          # 상품분류코드
     asoStdCd = Column(String(255), nullable=True)           # 협회표준코드

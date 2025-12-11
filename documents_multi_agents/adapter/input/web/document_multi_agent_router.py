@@ -14,7 +14,7 @@ from documents_multi_agents.adapter.input.web.request.insert_income_request impo
 from documents_multi_agents.domain.service.prompt_templates import PromptTemplates
 from util.cache.ai_cache import AICache
 from util.log.log import Log
-from util.security.crsf import verify_csrf_token
+from util.security.crsf import generate_csrf_token, verify_csrf_token, CSRF_COOKIE_NAME
 
 log_util = Log()
 logger = Log.get_logger()
@@ -566,6 +566,25 @@ async def analyze_document(now_mon: int, tar_mon: int, session_id: str = Depends
         return answer
     except Exception as e:
         raise HTTPException(500, f"{type(e).__name__}: {str(e)}")
+
+# -----------------------
+# 세션 로그인시 csrf_token 발급
+# -----------------------
+@documents_multi_agents_router.get("/csrf-token")
+async def get_csrf_token(response: Response):
+    csrf_token = generate_csrf_token()
+    logger.debug("[DEBUG] CSRF token generated in /csrf-token")
+
+    response.set_cookie(
+        key=CSRF_COOKIE_NAME,
+        value=csrf_token,
+        httponly=False,
+        secure=True,
+        samesite="strict",
+        max_age=3600
+    )
+
+    return {"csrf_token": csrf_token}
 
 # -----------------------
 # API 엔드포인트 - 사용자 입력 폼 데이터

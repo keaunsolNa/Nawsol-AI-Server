@@ -82,8 +82,65 @@ async def get_fund_info(date:str):
     result = await usecase.get_fund_data_by_date(date)
     return result
 
+@product_data_router.post("/fund/save")
+async def fetch_and_save_fund():
+    usecase = FetchProductDataUsecaseFactory.create()
+    saved_entities = await usecase.fetch_and_save_fund_data()
+
+    return {
+        "message": "FUND 정보가 성공적으로 저장되었습니다.",
+        "saved_count": len(saved_entities),
+        "items": [
+            {
+                "basDt": entity.basDt,
+                "srtnCd": entity.srtnCd,
+                "fndNm": entity.fndNm,
+                "ctg": entity.ctg,
+                "setpDt": entity.setpDt,
+                "fndTp": entity.fndTp,
+                "prdClsfCd": entity.prdClsfCd,
+                "asoStdCd": entity.asoStdCd,
+            }
+            for entity in saved_entities
+        ]
+    }
+
 @product_data_router.get("/bond/{date}")
 async def get_bond_info(date:str):
     usecase = FetchProductDataUsecaseFactory.create()
     result = await usecase.get_bond_data_by_date(date)
     return result
+
+@product_data_router.post("/bond/save")
+async def fetch_and_save_bond():
+    usecase = FetchProductDataUsecaseFactory.create()
+    saved_entities = await usecase.fetch_and_save_bond_data()
+
+    return {
+        "message": "BOND 정보가 성공적으로 저장되었습니다.",
+        "saved_count": len(saved_entities),
+        "items": [
+            {
+                "basDt": entity.basDt,
+                "crno": entity.crno,
+                "bondIsurNm": entity.bondIsurNm,
+                "bondIssuDt": entity.bondIssuDt,
+                "scrsItmsKcd": entity.scrsItmsKcd,
+                "scrsItmsKcdNm": entity.scrsItmsKcdNm,
+                "isinCd": entity.isinCd,
+                "isinCdNm": entity.isinCdNm,
+                "bondIssuFrmtNm": entity.bondIssuFrmtNm,
+                "bondExprDt": entity.bondExprDt,
+                "bondIssuCurCd": entity.bondIssuCurCd,
+                "bondIssuCurCdNm": entity.bondIssuCurCdNm,
+                "bondPymtAmt": entity.bondPymtAmt,
+                "bondIssuAmt": entity.bondIssuAmt,
+                "bondSrfcInrt": entity.bondSrfcInrt,
+                "irtChngDcd": entity.irtChngDcd,
+                "irtChngDcdNm": entity.irtChngDcdNm,
+                "bondIntTcd": entity.bondIntTcd,
+                "bondIntTcdNm": entity.bondIntTcdNm,
+            }
+            for entity in saved_entities
+        ]
+    }
