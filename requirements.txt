@@ -28,6 +28,9 @@ pycryptodome
 # Task Scheduling
 apscheduler
 
+#Crowling
+beautifulsoup4
+
 # AI/ML
 openai
 
