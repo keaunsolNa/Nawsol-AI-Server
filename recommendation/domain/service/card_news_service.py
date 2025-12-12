@@ -70,8 +70,6 @@ class CardNewsService:
 
         card_news = [f"분석 가능한 카드 뉴스 목록 ({len(community_and_news_data)}개"]
 
-        logger.debug(f"community_and_news_data = {community_and_news_data}")
-
         for idx, news in enumerate(community_and_news_data, 1):
             title = news.get('title', 'N/A')
             type_of_content = news.get('type_of_content', 'N/A')

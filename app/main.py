@@ -20,6 +20,7 @@ from recommendation.adapter.output.web.etf_recommendation_router import etf_reco
 from recommendation.adapter.output.web.fund_recommendation_router import fund_recommendation_router
 from recommendation.adapter.output.web.bond_recommendation_router import bond_recommendation_router
 from recommendation.adapter.output.web.card_news_router import card_news_recommendation
+from today_briefing.adapter.output.web.briefing_router import today_briefing_router
 from news_info.adapter.input.web.news_info_router import news_info_router
 from community.adapter.input.web.community_router import community_router
 from jobs import scheduler as jobs_scheduler
@@ -65,6 +66,7 @@ app.include_router(etf_recommendation_router, prefix="/etf-recommendation")
 app.include_router(fund_recommendation_router, prefix="/fund-recommendation")
 app.include_router(bond_recommendation_router, prefix="/bond-recommendation")
 app.include_router(card_news_recommendation, prefix="/card-news-recommendation")
+app.include_router(today_briefing_router, prefix="/today-briefing")
 app.include_router(news_info_router, prefix="/news_info")
 app.include_router(community_router, prefix="/community")
 app.include_router(kakao_authentication_router, prefix="/kakao-authentication")

@@ -7,7 +7,7 @@ from config.database.session import get_db_session
 from community.application.port.community_repository_port import CommunityRepositoryPort
 from community.domain.value_object.community_post import CommunityPost
 from community.infrastructure.orm.community_post_orm import CommunityPostORM
-from datetime import datetime, timedelta
+from datetime import datetime, date, time
 
 class CommunityRepositoryImpl(CommunityRepositoryPort):
     __instance = None
@@ -90,12 +90,16 @@ class CommunityRepositoryImpl(CommunityRepositoryPort):
 
     async def get_three_month_community_for_card_news(self) -> List[CommunityPostORM]:
 
-        three_months_ago = datetime.utcnow() - timedelta(days=90)
+        target_date = date.today()  # 또는 datetime.utcnow().date()
+
+        start = datetime.combine(target_date, time.min)  # 00:00:00
+        end = datetime.combine(target_date, time.max)  # 23:59:59.999999
 
         try:
             rows = (
                 self.db.query(CommunityPostORM)
-                .filter(CommunityPostORM.posted_at >= three_months_ago)
+                .filter(CommunityPostORM.posted_at >= start)
+                .filter(CommunityPostORM.posted_at <= end)
                 .order_by(CommunityPostORM.posted_at.desc())
                 .all()
             )
