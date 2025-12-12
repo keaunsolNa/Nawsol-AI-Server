@@ -51,16 +51,31 @@ class ETFRecommendationUseCase:
             total_expense = 0
             
             for record in ie_records:
+                # TOTAL_EXPENSE와 TOTAL_INCOME은 합계 필드이므로 개별 항목에서 제외
+                if record.key in ["TOTAL_EXPENSE", "TOTAL_INCOME"]:
+                    if record.key == "TOTAL_INCOME":
+                        total_income = record.value
+                    elif record.key == "TOTAL_EXPENSE":
+                        total_expense = record.value
+                    continue
+                
                 if record.ie_type == IEType.INCOME:
                     income_data[record.key] = record.value
-                    total_income += record.value
                 elif record.ie_type == IEType.EXPENSE:
                     expense_data[record.key] = record.value
-                    total_expense += record.value
+            
+            # TOTAL_INCOME/TOTAL_EXPENSE가 없으면 개별 항목 합계로 계산
+            if total_income == 0 and income_data:
+                total_income = sum(income_data.values())
+                logger.info(f"Calculated total_income from items: {total_income}")
+            
+            if total_expense == 0 and expense_data:
+                total_expense = sum(expense_data.values())
+                logger.info(f"Calculated total_expense from items: {total_expense}")
             
             surplus = total_income - total_expense
             
-            logger.info(f"Loaded financial data from DB: {len(ie_records)} records")
+            logger.info(f"Loaded financial data from DB: {len(ie_records)} records, total_income={total_income}, total_expense={total_expense}")
             
             return {
                 "income_data": income_data,
