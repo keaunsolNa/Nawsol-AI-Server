@@ -127,11 +127,35 @@ async def auth_status(request: Request, session_id: str | None = Cookie(None)):
     # 쿠키 확인
     logger.debug("Received session_id cookie")
 
+    # CSRF 토큰 생성 (비로그인 사용자를 위해)
+    csrf_token = generate_csrf_token()
+    logger.debug("CSRF token generated for guest user")
+
     if not session_id:
         logger.debug("No session_id received. Returning logged_in: False")
-        return {"logged_in": False}
+        # 비로그인 사용자에게도 CSRF 토큰 발급
+        response = JSONResponse({"logged_in": False})
+        response.set_cookie(
+            key=CSRF_COOKIE_NAME,
+            value=csrf_token,
+            httponly=False,  # JS에서 읽을 수 있도록
+            secure=False,     # 개발 환경에서 HTTP 허용
+            samesite="lax",
+            max_age=3600
+        )
+        return response
 
     exists = redis_client.exists(session_id)
     logger.debug("Redis session exists: %s", exists)
 
-    return {"logged_in": bool(exists)}
+    # 로그인 사용자에게도 CSRF 토큰 발급
+    response = JSONResponse({"logged_in": bool(exists)})
+    response.set_cookie(
+        key=CSRF_COOKIE_NAME,
+        value=csrf_token,
+        httponly=False,
+        secure=False,
+        samesite="lax",
+        max_age=3600
+    )
+    return response
