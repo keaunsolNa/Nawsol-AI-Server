@@ -69,7 +69,6 @@ async def get_etf_recommendation(
                 "total_income": result.get("total_income", 0),
                 "total_expense": result.get("total_expense", 0),
                 "available_amount": result.get("available_amount", 0),
-                "surplus": result.get("surplus", 0),  # 여유자금
                 "surplus_ratio": result.get("surplus_ratio", 0),  # 저축률
                 "recommendation_reason": result.get("recommendation_reason", ""),
                 "items": result.get("recommended_etfs", [])
@@ -82,7 +81,6 @@ async def get_etf_recommendation(
                 "total_income": 0,
                 "total_expense": 0,
                 "available_amount": 0,
-                "surplus": 0,
                 "surplus_ratio": 0,
                 "recommendation_reason": result.get("message", "ETF 추천을 불러오는데 실패했습니다."),
                 "items": []
@@ -98,7 +96,6 @@ async def get_etf_recommendation(
             "total_income": 0,
             "total_expense": 0,
             "available_amount": 0,
-            "surplus": 0,
             "surplus_ratio": 0,
             "recommendation_reason": f"ETF 추천 중 오류가 발생했습니다: {str(e)}",
             "items": []
@@ -133,7 +130,6 @@ async def get_etf_info(session_id: str = Depends(get_current_user)):
             "total_income": result.get("total_income", 0),
             "total_expense": result.get("total_expense", 0),
             "available_amount": result.get("available_amount", 0),
-            "surplus": result.get("surplus", 0),
             "surplus_ratio": result.get("surplus_ratio", 0),
             "recommendation_reason": result.get("recommendation_reason", ""),
             "items": recommended_etfs
@@ -172,7 +168,6 @@ async def get_etf_info(session_id: str = Depends(get_current_user)):
                 "total_income": 0,
                 "total_expense": 0,
                 "available_amount": 0,
-                "surplus": 0,
                 "surplus_ratio": 0,
                 "recommendation_reason": "소득/지출 정보가 없어 상위 3개 ETF를 보여드립니다.",
                 "items": limited_items
@@ -184,7 +179,6 @@ async def get_etf_info(session_id: str = Depends(get_current_user)):
                 "total_income": 0,
                 "total_expense": 0,
                 "available_amount": 0,
-                "surplus": 0,
                 "surplus_ratio": 0,
                 "recommendation_reason": "ETF 데이터를 불러올 수 없습니다.",
                 "items": []

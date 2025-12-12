@@ -291,7 +291,6 @@ class ETFRecommendationUseCase:
                     "total_income": financial_data["total_income"],
                     "total_expense": financial_data["total_expense"],
                     "available_amount": financial_data["surplus"],
-                    "surplus": financial_data["surplus"],  # 여유자금 필드 추가
                     "surplus_ratio": surplus_ratio,
                     "recommendation_reason": recommendation_result.get("recommendation", ""),
                     "recommended_etfs": [
