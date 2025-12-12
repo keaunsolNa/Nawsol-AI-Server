@@ -28,58 +28,62 @@ class CommunityRepositoryImpl(CommunityRepositoryPort):
             self.db: Session = get_db_session()
 
     def save_post_batch(self, posts: List[CommunityPost]) -> List[CommunityPost]:
-        """
-        provider + board_id + external_post_id 기준으로
-        이미 DB에 있는 글은 건너뛰고, 새로운 글만 insert
-        """
-        if not posts:
-            return []
 
-        new_list: List[CommunityPost] = []
+        try:
+            """
+            provider + board_id + external_post_id 기준으로
+            이미 DB에 있는 글은 건너뛰고, 새로운 글만 insert
+            """
+            if not posts:
+                return []
 
-        for p in posts:
-            existing = (
-                self.db.query(CommunityPostORM)
-                .filter(
-                    and_(
-                        CommunityPostORM.provider == p.provider,
-                        CommunityPostORM.board_id == p.board_id,
-                        CommunityPostORM.external_post_id == p.external_post_id,
+            new_list: List[CommunityPost] = []
+
+            for p in posts:
+                existing = (
+                    self.db.query(CommunityPostORM)
+                    .filter(
+                        and_(
+                            CommunityPostORM.provider == p.provider,
+                            CommunityPostORM.board_id == p.board_id,
+                            CommunityPostORM.external_post_id == p.external_post_id,
+                        )
+                    )
+                    .first()
+                )
+
+                if not existing:
+                    new_list.append(p)
+
+            # 전부 중복이면 그냥 원본 리스트 리턴
+            if not new_list:
+                return posts
+
+            orm_list: List[CommunityPostORM] = []
+            for p in new_list:
+                orm_list.append(
+                    CommunityPostORM(
+                        provider=p.provider,
+                        board_id=p.board_id,
+                        external_post_id=p.external_post_id,
+                        title=p.title,
+                        author=p.author,
+                        content=p.content,
+                        url=p.url,
+                        view_count=p.view_count,
+                        recommend_count=p.recommend_count,
+                        comment_count=p.comment_count,
+                        posted_at=p.posted_at,
+                        fetched_at=p.fetched_at,
                     )
                 )
-                .first()
-            )
 
-            if not existing:
-                new_list.append(p)
+            self.db.add_all(orm_list)
+            self.db.commit()
 
-        # 전부 중복이면 그냥 원본 리스트 리턴
-        if not new_list:
+            for orm_item in orm_list:
+                self.db.refresh(orm_item)
+
             return posts
-
-        orm_list: List[CommunityPostORM] = []
-        for p in new_list:
-            orm_list.append(
-                CommunityPostORM(
-                    provider=p.provider,
-                    board_id=p.board_id,
-                    external_post_id=p.external_post_id,
-                    title=p.title,
-                    author=p.author,
-                    content=p.content,
-                    url=p.url,
-                    view_count=p.view_count,
-                    recommend_count=p.recommend_count,
-                    comment_count=p.comment_count,
-                    posted_at=p.posted_at,
-                    fetched_at=p.fetched_at,
-                )
-            )
-
-        self.db.add_all(orm_list)
-        self.db.commit()
-
-        for orm_item in orm_list:
-            self.db.refresh(orm_item)
-
-        return posts
+        finally:
+            self.db.close()

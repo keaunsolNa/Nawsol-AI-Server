@@ -31,86 +31,92 @@ class ProductRepositoryImpl(ProductRepositoryPort):
             self.db: Session = get_db_session()
 
     async def get_etf_data_by_date(self, date:str) -> List[ProductETFORM]:
-        rows = (self.db.query(ProductETFORM).
-                filter(func.date_format(ProductETFORM.basDt, "%Y%m%d") == date).
-                all())
 
-        return [
-            ProductETFORM(
-                id=row.id,
-                fltRt=row.fltRt,
-                nav=row.nav,
-                mkp=row.mkp,
-                hipr=row.hipr,
-                lopr=row.lopr,
-                trqu=row.trqu,
-                trPrc=row.trPrc,
-                mrktTotAmt=row.mrktTotAmt,
-                nPptTotAmt=row.nPptTotAmt,
-                stLstgCnt=row.stLstgCnt,
-                bssIdxIdxNm=row.bssIdxIdxNm,
-                bssIdxClpr=row.bssIdxClpr,
-                basDt=row.basDt,
-                clpr=row.clpr,
-                vs=row.vs
-            )
-            for row in rows
-        ]
+        try:
+            rows = (self.db.query(ProductETFORM).
+                    filter(func.date_format(ProductETFORM.basDt, "%Y%m%d") == date).
+                    all())
+
+            return [
+                ProductETFORM(
+                    id=row.id,
+                    fltRt=row.fltRt,
+                    nav=row.nav,
+                    mkp=row.mkp,
+                    hipr=row.hipr,
+                    lopr=row.lopr,
+                    trqu=row.trqu,
+                    trPrc=row.trPrc,
+                    mrktTotAmt=row.mrktTotAmt,
+                    nPptTotAmt=row.nPptTotAmt,
+                    stLstgCnt=row.stLstgCnt,
+                    bssIdxIdxNm=row.bssIdxIdxNm,
+                    bssIdxClpr=row.bssIdxClpr,
+                    basDt=row.basDt,
+                    clpr=row.clpr,
+                    vs=row.vs
+                )
+                for row in rows
+            ]
+        finally:
+            self.db.close()
 
     async def save_etf_batch(self, etf_list: List[ProductEtf]) -> List[ProductEtf]:
+        try:
+            if not etf_list:
+                return []
 
-        if not etf_list:
-            return []
+            new_etf_list = []
 
-        new_etf_list = []
+            for etfs in etf_list:
 
-        for etfs in etf_list:
+                etfs_date_only = etfs.basDt.date() if hasattr(etfs.basDt, 'basDt') else etfs.basDt
 
-            etfs_date_only = etfs.basDt.date() if hasattr(etfs.basDt, 'basDt') else etfs.basDt
+                existing = self.db.query(ProductETFORM).filter(
+                    and_(
+                        ProductETFORM.basDt == etfs.basDt,
+                        # datetime을 날짜만 비교
+                        func.DATE(ProductETFORM.basDt) == etfs_date_only,
+                    )
+                ).first()
 
-            existing = self.db.query(ProductETFORM).filter(
-                and_(
-                    ProductETFORM.basDt == etfs.basDt,
-                    # datetime을 날짜만 비교
-                    func.DATE(ProductETFORM.basDt) == etfs_date_only,
+                # 중복이 없으면 추가
+                if not existing:
+                    new_etf_list.append(etfs)
+
+            if not new_etf_list:
+                return etf_list
+
+            orm_list = [
+                ProductETFORM(
+                    fltRt=etf.fltRt,
+                    nav=etf.nav,
+                    mkp=etf.mkp,
+                    hipr=etf.hipr,
+                    lopr=etf.lopr,
+                    trqu=etf.trqu,
+                    trPrc=etf.trPrc,
+                    mrktTotAmt=etf.mrktTotAmt,
+                    nPptTotAmt=etf.nPptTotAmt,
+                    stLstgCnt=etf.stLstgCnt,
+                    bssIdxIdxNm=etf.bssIdxIdxNm,
+                    bssIdxClpr=etf.bssIdxClpr,
+                    basDt=etf.basDt,
+                    clpr=etf.clpr,
+                    vs=etf.vs
                 )
-            ).first()
+                for etf in new_etf_list
+            ]
 
-            # 중복이 없으면 추가
-            if not existing:
-                new_etf_list.append(etfs)
+            self.db.add_all(orm_list)
+            self.db.commit()
 
-        if not new_etf_list:
+            for orm_item in orm_list:
+                self.db.refresh(orm_item)
+
             return etf_list
-
-        orm_list = [
-            ProductETFORM(
-                fltRt=etf.fltRt,
-                nav=etf.nav,
-                mkp=etf.mkp,
-                hipr=etf.hipr,
-                lopr=etf.lopr,
-                trqu=etf.trqu,
-                trPrc=etf.trPrc,
-                mrktTotAmt=etf.mrktTotAmt,
-                nPptTotAmt=etf.nPptTotAmt,
-                stLstgCnt=etf.stLstgCnt,
-                bssIdxIdxNm=etf.bssIdxIdxNm,
-                bssIdxClpr=etf.bssIdxClpr,
-                basDt=etf.basDt,
-                clpr=etf.clpr,
-                vs=etf.vs
-            )
-            for etf in new_etf_list
-        ]
-
-        self.db.add_all(orm_list)
-        self.db.commit()
-
-        for orm_item in orm_list:
-            self.db.refresh(orm_item)
-
-        return etf_list
+        finally:
+            self.db.close()
 
     def get_all_etf(self, limit: int = 50) -> List[ProductETFORM]:
         """
@@ -135,72 +141,81 @@ class ProductRepositoryImpl(ProductRepositoryPort):
             logger = Log.get_logger()
             logger.error(f"Failed to get ETF list: {str(e)}")
             return []
+        finally:
+            self.db.close()
 
     async def get_fund_data_by_date(self, date:str) -> List[ProductFundORM]:
-        rows = (self.db.query(ProductFundORM).
-                filter(func.date_format(ProductFundORM.basDt, "%Y%m%d") == date).
-                all())
-        return [
-            ProductFundORM(
-                id=row.id,
-                basDt = row.basDt,
-                srtnCd = row.srtnCd,
-                fndNm = row.fndNm,
-                ctg = row.ctg,
-                setpDt = row.setpDt,
-                fndTp = row.fndTp,
-                prdClsfCd = row.prdClsfCd,
-                asoStdCd = row.asoStdCd,
-            )
-            for row in rows
-        ]
+
+        try:
+            rows = (self.db.query(ProductFundORM).
+                    filter(func.date_format(ProductFundORM.basDt, "%Y%m%d") == date).
+                    all())
+            return [
+                ProductFundORM(
+                    id=row.id,
+                    basDt = row.basDt,
+                    srtnCd = row.srtnCd,
+                    fndNm = row.fndNm,
+                    ctg = row.ctg,
+                    setpDt = row.setpDt,
+                    fndTp = row.fndTp,
+                    prdClsfCd = row.prdClsfCd,
+                    asoStdCd = row.asoStdCd,
+                )
+                for row in rows
+            ]
+        finally:
+            self.db.close()
 
     async def save_fund_batch(self, fund_list: List[ProductFundORM]) -> List[ProductFundORM]:
 
-        if not fund_list:
-            return []
+        try:
+            if not fund_list:
+                return []
 
-        new_fund_list = []
+            new_fund_list = []
 
-        for fund in fund_list:
+            for fund in fund_list:
 
-            fund_date_only = fund.basDt.date() if hasattr(fund.basDt, 'date') else fund.basDt
+                fund_date_only = fund.basDt.date() if hasattr(fund.basDt, 'date') else fund.basDt
 
-            existing = self.db.query(ProductFundORM).filter(
-                and_(
-                    ProductFundORM.basDt == fund.basDt,
-                    func.DATE(ProductFundORM.basDt) == fund_date_only,
+                existing = self.db.query(ProductFundORM).filter(
+                    and_(
+                        ProductFundORM.basDt == fund.basDt,
+                        func.DATE(ProductFundORM.basDt) == fund_date_only,
+                    )
+                ).first()
+
+                if not existing:
+                    new_fund_list.append(fund)
+
+            # 신규 없으면 입력 필요 없음
+            if not new_fund_list:
+                return fund_list
+
+            orm_list = [
+                ProductFundORM(
+                    basDt=f.basDt,
+                    srtnCd=f.srtnCd,
+                    fndNm=f.fndNm,
+                    ctg=f.ctg,
+                    setpDt=f.setpDt,
+                    fndTp=f.fndTp,
+                    prdClsfCd=f.prdClsfCd,
+                    asoStdCd=f.asoStdCd
                 )
-            ).first()
+                for f in new_fund_list
+            ]
 
-            if not existing:
-                new_fund_list.append(fund)
+            self.db.add_all(orm_list)
+            self.db.commit()
 
-        # 신규 없으면 입력 필요 없음
-        if not new_fund_list:
+            for orm_item in orm_list:
+                self.db.refresh(orm_item)
+
             return fund_list
-
-        orm_list = [
-            ProductFundORM(
-                basDt=f.basDt,
-                srtnCd=f.srtnCd,
-                fndNm=f.fndNm,
-                ctg=f.ctg,
-                setpDt=f.setpDt,
-                fndTp=f.fndTp,
-                prdClsfCd=f.prdClsfCd,
-                asoStdCd=f.asoStdCd
-            )
-            for f in new_fund_list
-        ]
-
-        self.db.add_all(orm_list)
-        self.db.commit()
-
-        for orm_item in orm_list:
-            self.db.refresh(orm_item)
-
-        return fund_list
+        finally:
+            self.db.close()
 
     # fund 상품 목록 조회
     def get_all_fund(self, limit: int = 50) -> List[ProductFundORM]:
@@ -217,95 +232,102 @@ class ProductRepositoryImpl(ProductRepositoryPort):
             logger = Log.get_logger()
             logger.error(f"Failed to get Fund list: {str(e)}")
             return []
+        finally:
+            self.db.close()
 
     async def get_bond_data_by_date(self, date:str) -> List[ProductBondORM]:
-        rows = (self.db.query(ProductBondORM).
-                filter(func.date_format(ProductBondORM.basDt, "%Y%m%d") == date).
-                all())
+        try:
+            rows = (self.db.query(ProductBondORM).
+                    filter(func.date_format(ProductBondORM.basDt, "%Y%m%d") == date).
+                    all())
 
-        return [
-            ProductBondORM(
-                id = row.id,
-                basDt = row.basDt,
-                crno = row.crno,
-                bondIsurNm = row.bondIsurNm,
-                bondIssuDt = row.bondIssuDt,
-                scrsItmsKcd = row.scrsItmsKcd,
-                scrsItmsKcdNm = row.scrsItmsKcdNm,
-                isinCd = row.isinCd,
-                isinCdNm = row.isinCdNm,
-                bondIssuFrmtNm = row.bondIssuFrmtNm,
-                bondExprDt = row.bondExprDt,
-                bondIssuCurCd = row.bondIssuCurCd,
-                bondIssuCurCdNm = row.bondIssuCurCdNm,
-                bondPymtAmt = row.bondPymtAmt,
-                bondIssuAmt = row.bondIssuAmt,
-                bondSrfcInrt = row.bondSrfcInrt,
-                irtChngDcd = row.irtChngDcd,
-                irtChngDcdNm = row.irtChngDcdNm,
-                bondIntTcd = row.bondIntTcd,
-                bondIntTcdNm = row.bondIntTcdNm,
-            )
-            for row in rows
-        ]
-
+            return [
+                ProductBondORM(
+                    id = row.id,
+                    basDt = row.basDt,
+                    crno = row.crno,
+                    bondIsurNm = row.bondIsurNm,
+                    bondIssuDt = row.bondIssuDt,
+                    scrsItmsKcd = row.scrsItmsKcd,
+                    scrsItmsKcdNm = row.scrsItmsKcdNm,
+                    isinCd = row.isinCd,
+                    isinCdNm = row.isinCdNm,
+                    bondIssuFrmtNm = row.bondIssuFrmtNm,
+                    bondExprDt = row.bondExprDt,
+                    bondIssuCurCd = row.bondIssuCurCd,
+                    bondIssuCurCdNm = row.bondIssuCurCdNm,
+                    bondPymtAmt = row.bondPymtAmt,
+                    bondIssuAmt = row.bondIssuAmt,
+                    bondSrfcInrt = row.bondSrfcInrt,
+                    irtChngDcd = row.irtChngDcd,
+                    irtChngDcdNm = row.irtChngDcdNm,
+                    bondIntTcd = row.bondIntTcd,
+                    bondIntTcdNm = row.bondIntTcdNm,
+                )
+                for row in rows
+            ]
+        finally:
+            self.db.close()
 
     async def save_bond_batch(self, bond_list: List[ProductBondORM]) -> List[ProductBondORM]:
 
-        if not bond_list:
-            return []
+        try:
+            if not bond_list:
+                return []
 
-        new_bond_list = []
+            new_bond_list = []
 
-        for bond in bond_list:
+            for bond in bond_list:
 
-            bond_date_only = bond.basDt.date() if hasattr(bond.basDt, 'date') else bond.basDt
+                bond_date_only = bond.basDt.date() if hasattr(bond.basDt, 'date') else bond.basDt
 
-            existing = self.db.query(ProductBondORM).filter(
-                and_(
-                    ProductBondORM.basDt == bond.basDt,
-                    func.DATE(ProductBondORM.basDt) == bond_date_only,
+                existing = self.db.query(ProductBondORM).filter(
+                    and_(
+                        ProductBondORM.basDt == bond.basDt,
+                        func.DATE(ProductBondORM.basDt) == bond_date_only,
+                    )
+                ).first()
+
+                if not existing:
+                    new_bond_list.append(bond)
+
+            if not new_bond_list:
+                return bond_list
+
+            orm_list = [
+                ProductBondORM(
+                    basDt=b.basDt,
+                    crno=b.crno,
+                    bondIsurNm=b.bondIsurNm,
+                    bondIssuDt=b.bondIssuDt,
+                    scrsItmsKcd=b.scrsItmsKcd,
+                    scrsItmsKcdNm=b.scrsItmsKcdNm,
+                    isinCd=b.isinCd,
+                    isinCdNm=b.isinCdNm,
+                    bondIssuFrmtNm=b.bondIssuFrmtNm,
+                    bondExprDt=b.bondExprDt,
+                    bondIssuCurCd=b.bondIssuCurCd,
+                    bondIssuCurCdNm=b.bondIssuCurCdNm,
+                    bondPymtAmt=b.bondPymtAmt,
+                    bondIssuAmt=b.bondIssuAmt,
+                    bondSrfcInrt=b.bondSrfcInrt,
+                    irtChngDcd=b.irtChngDcd,
+                    irtChngDcdNm=b.irtChngDcdNm,
+                    bondIntTcd=b.bondIntTcd,
+                    bondIntTcdNm=b.bondIntTcdNm
                 )
-            ).first()
+                for b in new_bond_list
+            ]
 
-            if not existing:
-                new_bond_list.append(bond)
+            self.db.add_all(orm_list)
+            self.db.commit()
 
-        if not new_bond_list:
+            for orm_item in orm_list:
+                self.db.refresh(orm_item)
+
             return bond_list
-
-        orm_list = [
-            ProductBondORM(
-                basDt=b.basDt,
-                crno=b.crno,
-                bondIsurNm=b.bondIsurNm,
-                bondIssuDt=b.bondIssuDt,
-                scrsItmsKcd=b.scrsItmsKcd,
-                scrsItmsKcdNm=b.scrsItmsKcdNm,
-                isinCd=b.isinCd,
-                isinCdNm=b.isinCdNm,
-                bondIssuFrmtNm=b.bondIssuFrmtNm,
-                bondExprDt=b.bondExprDt,
-                bondIssuCurCd=b.bondIssuCurCd,
-                bondIssuCurCdNm=b.bondIssuCurCdNm,
-                bondPymtAmt=b.bondPymtAmt,
-                bondIssuAmt=b.bondIssuAmt,
-                bondSrfcInrt=b.bondSrfcInrt,
-                irtChngDcd=b.irtChngDcd,
-                irtChngDcdNm=b.irtChngDcdNm,
-                bondIntTcd=b.bondIntTcd,
-                bondIntTcdNm=b.bondIntTcdNm
-            )
-            for b in new_bond_list
-        ]
-
-        self.db.add_all(orm_list)
-        self.db.commit()
-
-        for orm_item in orm_list:
-            self.db.refresh(orm_item)
-
-        return bond_list
+        finally:
+            self.db.close()
 
     def get_all_bond(self, limit: int = 50) -> List[ProductBondORM]:
         """
@@ -330,3 +352,5 @@ class ProductRepositoryImpl(ProductRepositoryPort):
             logger = Log.get_logger()
             logger.error(f"Failed to get Bond list: {str(e)}")
             return []
+        finally:
+            self.db.close()

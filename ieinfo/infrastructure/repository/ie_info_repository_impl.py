@@ -39,7 +39,9 @@ class IEInfoRepositoryImpl(IEInfoRepositoryPort):
             self.db.rollback()
             logger.error(f"Failed to insert IE_INFO records: {str(e)}")
             raise
-    
+        finally:
+            self.db.close()
+
     def delete_by_session_and_month(self, session_id: str, year: int, month: int) -> bool:
         """특정 세션의 특정 월 데이터 삭제 (중복 방지용)"""
         try:
@@ -57,7 +59,9 @@ class IEInfoRepositoryImpl(IEInfoRepositoryPort):
             self.db.rollback()
             logger.error(f"Failed to delete IE_INFO records: {str(e)}")
             raise
-    
+        finally:
+            self.db.close()
+
     def get_by_session(self, session_id: str, year: int = None, month: int = None) -> List[IEInfo]:
         """세션별 데이터 조회"""
         try:
@@ -72,3 +76,5 @@ class IEInfoRepositoryImpl(IEInfoRepositoryPort):
         except Exception as e:
             logger.error(f"Failed to fetch IE_INFO records: {str(e)}")
             raise
+        finally:
+            self.db.close()

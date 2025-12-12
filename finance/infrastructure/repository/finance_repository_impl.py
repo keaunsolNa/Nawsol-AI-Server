@@ -27,44 +27,47 @@ class FinanceRepositoryImpl(FinanceRepositoryPort):
 
     def save_finance_data(self, finance_data: List[FinanceORM]) -> List[FinanceORM]:
 
-        if not finance_data:
-            return []
+        try:
+            if not finance_data:
+                return []
 
-        new_finance_data = []
+            new_finance_data = []
 
-        for finance in finance_data:
+            for finance in finance_data:
 
-            existing = self.db.query(FinanceORM).filter(
-                and_(
-                    FinanceORM.user_id == finance.user_id,
-                    FinanceORM.type == finance.type,
-                    FinanceORM.base_dt == finance.base_dt,
-                    FinanceORM.key == finance.key,
-                    FinanceORM.value == finance.value
+                existing = self.db.query(FinanceORM).filter(
+                    and_(
+                        FinanceORM.user_id == finance.user_id,
+                        FinanceORM.type == finance.type,
+                        FinanceORM.base_dt == finance.base_dt,
+                        FinanceORM.key == finance.key,
+                        FinanceORM.value == finance.value
+                    )
+                ).first()
+
+                if not existing:
+                    new_finance_data.append(finance)
+
+            if not new_finance_data:
+                return []
+
+            orm_list = [
+                FinanceORM(
+                    user_id=finance.user_id,
+                    type=finance.type,
+                    base_dt=finance.base_dt,
+                    key=finance.key,
+                    value=finance.value
                 )
-            ).first()
+                for finance in new_finance_data
+            ]
 
-            if not existing:
-                new_finance_data.append(finance)
+            self.db.add_all(orm_list)
+            self.db.commit()
 
-        if not new_finance_data:
-            return []
+            for orm_item in orm_list:
+                self.db.refresh(orm_item)
 
-        orm_list = [
-            FinanceORM(
-                user_id=finance.user_id,
-                type=finance.type,
-                base_dt=finance.base_dt,
-                key=finance.key,
-                value=finance.value
-            )
-            for finance in new_finance_data
-        ]
-
-        self.db.add_all(orm_list)
-        self.db.commit()
-
-        for orm_item in orm_list:
-            self.db.refresh(orm_item)
-
-        return orm_list
+            return orm_list
+        finally:
+            self.db.close()

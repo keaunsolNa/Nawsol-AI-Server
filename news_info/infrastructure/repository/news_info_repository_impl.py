@@ -32,62 +32,66 @@ class NewsInfoRepositoryImpl(NewsInfoRepositoryPort):
             self.db: Session = get_db_session()
 
     async def save_news_batch(self, news_list: List[NewsItem]) -> List[NewsItem]:
-        if not news_list:
-            return []
 
-        new_list: List[NewsItem] = []
+        try:
+            if not news_list:
+                return []
 
-        for item in news_list:
-            canonical_url = (item.originallink or item.link or "").strip()
-            if not canonical_url:
-                continue
+            new_list: List[NewsItem] = []
 
-            canonical_url_hash = _md5_hex(canonical_url)
+            for item in news_list:
+                canonical_url = (item.originallink or item.link or "").strip()
+                if not canonical_url:
+                    continue
 
-            existing = self.db.query(NewsInfoORM).filter(
-                and_(
-                    NewsInfoORM.provider == NewsProvider.NAVER_NEWS,
-                    NewsInfoORM.canonical_url_hash == canonical_url_hash,
+                canonical_url_hash = _md5_hex(canonical_url)
+
+                existing = self.db.query(NewsInfoORM).filter(
+                    and_(
+                        NewsInfoORM.provider == NewsProvider.NAVER_NEWS,
+                        NewsInfoORM.canonical_url_hash == canonical_url_hash,
+                    )
+                ).first()
+
+                if not existing:
+                    new_list.append(item)
+
+            if not new_list:
+                return news_list
+
+            orm_list = []
+            for item in new_list:
+                canonical_url = (item.originallink or item.link or "").strip()
+                canonical_url_hash = _md5_hex(canonical_url)
+
+                orm_list.append(
+                    NewsInfoORM(
+                        provider=NewsProvider.NAVER_NEWS,
+                        title=item.title,
+                        description=item.description,
+                        content=getattr(item, "content", None),
+                        link=item.link,
+                        originallink=item.originallink,
+                        canonical_url=canonical_url,
+                        canonical_url_hash=canonical_url_hash,
+                        published_at=item.published_at.timestamp if item.published_at else None,
+                        raw_json={
+                            "title": item.title,
+                            "description": item.description,
+                            "content": getattr(item, "content", None),
+                            "link": item.link,
+                            "originallink": item.originallink,
+                            "published_at": item.published_at.timestamp.isoformat() if item.published_at else None,
+                        },
+                    )
                 )
-            ).first()
 
-            if not existing:
-                new_list.append(item)
+            self.db.add_all(orm_list)
+            self.db.commit()
 
-        if not new_list:
+            for orm_item in orm_list:
+                self.db.refresh(orm_item)
+
             return news_list
-
-        orm_list = []
-        for item in new_list:
-            canonical_url = (item.originallink or item.link or "").strip()
-            canonical_url_hash = _md5_hex(canonical_url)
-
-            orm_list.append(
-                NewsInfoORM(
-                    provider=NewsProvider.NAVER_NEWS,
-                    title=item.title,
-                    description=item.description,
-                    content=getattr(item, "content", None),
-                    link=item.link,
-                    originallink=item.originallink,
-                    canonical_url=canonical_url,
-                    canonical_url_hash=canonical_url_hash,
-                    published_at=item.published_at.timestamp if item.published_at else None,
-                    raw_json={
-                        "title": item.title,
-                        "description": item.description,
-                        "content": getattr(item, "content", None),
-                        "link": item.link,
-                        "originallink": item.originallink,
-                        "published_at": item.published_at.timestamp.isoformat() if item.published_at else None,
-                    },
-                )
-            )
-
-        self.db.add_all(orm_list)
-        self.db.commit()
-
-        for orm_item in orm_list:
-            self.db.refresh(orm_item)
-
-        return news_list
+        finally:
+            self.db.close()

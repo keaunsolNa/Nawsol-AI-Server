@@ -129,7 +129,8 @@ class AnalyzeHistoryRepositoryImpl(AnalyzeHistoryRepositoryPort):
         except Exception as e:
             logger.error(f"[ANALYZE_HISTORY] 유사 패턴 검색 실패: {str(e)}")
             return None
-    
+        finally:
+            self.session.close()
     def save_gpt_advice(self, pattern: Dict[str, Any], gpt_advice: str) -> bool:
         """
         GPT 조언 저장 (HTML 태그 제거)
@@ -173,7 +174,9 @@ class AnalyzeHistoryRepositoryImpl(AnalyzeHistoryRepositoryPort):
             self.session.rollback()
             logger.error(f"[ANALYZE_HISTORY] GPT 조언 저장 실패: {str(e)}")
             return False
-    
+        finally:
+            self.session.close()
+
     def increment_use_count(self, analyze_id: int) -> bool:
         """
         사용 횟수 증가
@@ -202,7 +205,9 @@ class AnalyzeHistoryRepositoryImpl(AnalyzeHistoryRepositoryPort):
             self.session.rollback()
             logger.error(f"[ANALYZE_HISTORY] 사용 횟수 증가 실패: {str(e)}")
             return False
-    
+        finally:
+            self.session.close()
+
     def get_total_count(self) -> int:
         """
         전체 레코드 수 조회
@@ -217,3 +222,5 @@ class AnalyzeHistoryRepositoryImpl(AnalyzeHistoryRepositoryPort):
         except Exception as e:
             logger.error(f"[ANALYZE_HISTORY] 레코드 수 조회 실패: {str(e)}")
             return 0
+        finally:
+            self.session.close()
