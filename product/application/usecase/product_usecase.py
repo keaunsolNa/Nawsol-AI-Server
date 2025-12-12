@@ -65,15 +65,16 @@ class FetchProductUseCase:
     async def get_fund_data_by_date(self, date:str) -> List[ProductFundORM]:
         return await self.repository.get_fund_data_by_date(date)
 
-    async def fetch_and_save_fund_data(self, start:str, end:str) -> List[ProductFund]:
+    async def fetch_and_save_fund_data(self, start:str = None, end:str = None) -> List[ProductFund]:
         client = DataGoClient()
         all_fund_entities = []
 
-        if start is not None and end is not None:
+        if start not in (None, "") and end not in (None, ""):
             start_date = datetime.strptime(start, "%Y%m%d")
             end_date = datetime.strptime(end, "%Y%m%d")
 
             current_date = start_date
+
             while current_date <= end_date:
                 today = current_date.strftime("%Y%m%d")
 

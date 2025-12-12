@@ -24,7 +24,7 @@ class ProductRepositoryPort(ABC):
         pass
 
     @abstractmethod
-    async def save_fund_batch(self, etf_list: List[ProductFund]) -> List[ProductFund]:
+    async def save_fund_batch(self, fund_list: List[ProductFund]) -> List[ProductFund]:
         pass
 
     @abstractmethod

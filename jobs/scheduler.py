@@ -15,10 +15,10 @@ load_dotenv()
 
 cron_etf_hour = os.getenv("CRON_ETF_HOUR", "03")
 cron_etf_minute = os.getenv("CRON_ETF_MINUTE", "00")
-cron_bond_hour = os.getenv("CRON_FUND_HOUR", "04")
-cron_bond_minute = os.getenv("CRON_FUND_MINUTE", "00")
-cron_fund_hour = os.getenv("CRON_BOND_HOUR", "03")
-cron_fund_minute = os.getenv("CRON_BOND_MINUTE", "30")
+cron_bond_hour = os.getenv("CRON_BOND_HOUR", "04")
+cron_bond_minute = os.getenv("CRON_BOND_MINUTE", "00")
+cron_fund_hour = os.getenv("CRON_FUND_HOUR", "03")
+cron_fund_minute = os.getenv("CRON_FUND_MINUTE", "30")
 
 cron_exchange_hour = os.getenv("CRON_EXCHANGE_HOUR", "05")
 cron_exchange_minute = os.getenv("CRON_EXCHANGE_MINUTE", "30")
@@ -77,15 +77,12 @@ async def run_scheduler_ecos_interest():
 ## ETF
 async def run_scheduler_product_etf():
     usecase = FetchProductDataUsecaseFactory.create()
-    await usecase.fetch_and_save_etf_data()
+    await usecase.fetch_and_save_etf_data("","")
 
 ## 펀드
 async def run_scheduler_product_fund():
     usecase = FetchProductDataUsecaseFactory.create()
-    from datetime import datetime
-
-    today = datetime.now().strftime("%Y%m%d")
-    await usecase.get_fund_data_by_date(today)
+    await usecase.fetch_and_save_fund_data("","")
 
 ## 채권
 async def run_scheduler_product_bond():
