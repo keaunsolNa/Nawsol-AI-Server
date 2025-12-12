@@ -3,9 +3,12 @@ from fastapi import APIRouter, Depends, Query
 from account.adapter.input.web.session_helper import get_current_user
 from recommendation.application.usecase.fund_recommendation_usecase import FundRecommendationUseCase
 from product.application.factory.fetch_product_data_usecase_factory import FetchProductDataUsecaseFactory
-from util.log.log import Log
 
-logger = Log.get_logger()
+import logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+
 fund_recommendation_router = APIRouter(tags=["fund_recommendation"])
 usecase = FundRecommendationUseCase.get_instance()
 
@@ -95,6 +98,7 @@ async def get_etf_info(session_id: str = Depends(get_current_user)):
             "items": result.get("recommended_funds", [])
         }
     except Exception as e:
+        logger.exception("")
         logger.debug(f"Error in fund-info: {str(e)}")
         # 에러 발생 시 외부 API에서 데이터 가져오기 (fallback)
         try:

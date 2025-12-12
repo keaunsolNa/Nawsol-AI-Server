@@ -6,9 +6,10 @@ from ieinfo.infrastructure.repository.ie_info_repository_impl import IEInfoRepos
 from ieinfo.infrastructure.orm.ie_info import IEType
 from product.infrastructure.repository.product_repository_impl import ProductRepositoryImpl
 from recommendation.domain.service.fund_recommendation_service import FundRecommendationService
-from util.log.log import Log
 
-logger = Log.get_logger
+import logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 class FundRecommendationUseCase:
 
@@ -169,7 +170,7 @@ class FundRecommendationUseCase:
             
             is_logged_in = user_token and user_token != "GUEST"
             
-            logger.info(f"User logged in: {is_logged_in}")
+            #logger.info(f"User logged in: {is_logged_in}")
             
             # 2. 자산 정보 가져오기
             financial_data = None

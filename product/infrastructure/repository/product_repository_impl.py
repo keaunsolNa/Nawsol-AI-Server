@@ -222,7 +222,8 @@ class ProductRepositoryImpl(ProductRepositoryPort):
         try:
             # 최신 데이터 기준으로 정렬하여 조회
             etf_list = self.db.query(ProductFundORM).order_by(
-                ProductFundORM.basDt.desc()
+                ProductFundORM.basDt.desc(),
+                ProductFundORM.fndNm.desc()
             ).limit(limit).all()
             
             return etf_list
