@@ -44,7 +44,7 @@ class BriefingUseCase:
             news_records = await self.news_repository.get_three_month_news_for_card_news()
             community_records = await self.community_repository.get_three_month_community_for_card_news()
             client = EcosClient()
-            start_date = (datetime.utcnow() - timedelta(days=1)).strftime("%Y%m%d")
+            start_date = (datetime.utcnow() - timedelta(days=7)).strftime("%Y%m%d")
             end_date = datetime.utcnow().strftime("%Y%m%d")
 
             exchange_rate = await client.get_exchange_rate(start_date, end_date)
